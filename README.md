@@ -1,5 +1,5 @@
 # projet-G-B
-zeineb sahbani 
+zeineb sahbani , amine chatti , malek ben abdallah
 # 📌 Système de Gestion de Réservations — Langage C
 Application en **langage C** permettant de gérer des réservations de salles de réunion, avec :
 - vérification automatique des disponibilités,
