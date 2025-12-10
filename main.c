@@ -285,3 +285,121 @@ void classement_clients(){
     printf(GREEN "\n🏆 Clients les plus fréquents:\n" RESET);
     for(int i=0;i<nb && i<10;i++) printf(" #%d %-20s -> %d réservations\n", i+1, stats[i].nom, stats[i].nb_reservations);
 }
+int main(void){
+    /* Dossiers */
+    #ifdef _WIN32
+      system("mkdir data 2>nul"); system("mkdir factures 2>nul");
+    #else
+      system("mkdir -p data factures 2> /dev/null || true");
+    #endif
+
+    
+    strcpy(salles[0].nom,"A"); salles[0].capacite=10; salles[0].tarif_horaire=50.0f;
+    strcpy(salles[1].nom,"B"); salles[1].capacite=12; salles[1].tarif_horaire=60.0f;
+    strcpy(salles[2].nom,"C"); salles[2].capacite=20; salles[2].tarif_horaire=75.0f;
+    strcpy(salles[3].nom,"D"); salles[3].capacite=8;  salles[3].tarif_horaire=45.0f;
+    sauvgarder_tarif(salles,nb_salles);
+    int Nbline=0;
+    
+    charger_reservations(&Nbline);
+
+    int choix;
+    do{
+        afficher_menu();
+        printf("Votre choix : ");
+        if (scanf("%d",&choix)!=1){ while(getchar()!='\n'); choix=0; }
+        switch(choix){
+            case 1: {
+                char nom[50], salle_nom[50], date[11], hd[6], hf[6]; int pers;
+                printf("Nom client : "); scanf(" %49[^\n]", nom);
+                 while (1) {
+                    printf("Date (JJ/MM/AAAA) : ");
+                    scanf(" %10s", date);
+
+                    if (dateValide(date)) 
+                    {
+                        printf("Date valide : %s\n", date);break;
+                    }
+                    else {
+                    printf("Date invalide, veuillez réessayer.\n");}
+                }
+                while (1) {
+                    printf("Heure début (HH:MM) : ");
+                    scanf(" %5s", hd);
+                    if (heureValide(hd)) {
+                    printf("Heure valide : %s\n", hd);
+                    break; // on sort de la boucle
+                    } else {
+                        printf("Heure invalide, veuillez réessayer.\n");}
+                    }
+                while (1) {
+                    printf("Heure fin (HH:MM) : ");
+                    scanf(" %5s", hf);
+                    if (heureValide(hf)) {
+                    printf("Heure valide : %s\n", hf);
+                    break; // on sort de la boucle
+                    } else {
+                        printf("Heure invalide, veuillez réessayer.\n");}
+                    }
+                printf("Salle désirée : "); scanf(" %49s", salle_nom);
+                Salle* ps;
+                ps=psalle(salle_nom);
+                if(!ps){ afficher_erreur("Salle inconnue."); break; }
+                printf("Nb personnes : "); scanf("%d",&pers);
+                if(!capacite_ok(ps,pers)) break;
+                Reservation r;
+                r.id=Nbline+1;
+                strncpy(r.client,nom,49); r.client[49]='\0';
+                strncpy(r.nom_salle,salle_nom,49); r.nom_salle[49]='\0';
+                strncpy(r.date,date,10); r.date[10]='\0';
+                strncpy(r.debut,hd,5); r.debut[5]='\0';
+                strncpy(r.fin,hf,5); r.fin[5]='\0';
+                r.nb_personnes=pers;
+                r.tarif=calcul_tarif(ps,hd,hf);
+                strncpy(r.statut,"confirmée",29); r.statut[29]='\0';
+                if(!salle_disponible(&r,tete_reservations)){ afficher_erreur("Chevauchement !"); break; }
+                ajouter_en_tete(&r);
+                Nbline++;
+                sauvegarder_reservation(tete_reservations);
+                generer_facture(&r);
+                afficher_succes("Réservation enregistrée.");
+                break;
+            }
+            case 2: chiffre_affaires_par_salle(); break;
+            case 3: reservations_par_mois_cette_annee(); break;
+            case 4: salles_les_plus_populaires(); break;
+            case 5: {
+                int id; printf("ID réservation à supprimer : "); scanf("%d",&id);
+                supprimer_reservation(id); break;
+            }
+            case 6: {
+                char crit[16], val[64];
+                printf("Critère (client/salle/date) : "); scanf(" %15s", crit);
+                printf("Valeur : "); scanf(" %63[^\n]", val);
+                rechercher_reservation(crit,val);
+                break;
+            }
+            case 7: {
+                char statut[30];
+                printf("Statut (confirmée/annulée/en attente) : "); scanf(" %29[^\n]", statut);
+                filtrer_reservations(statut);
+                break;
+            }
+            case 8: taux_occupation(); break;
+            case 9: revenus_annuels(); break;
+            case 10: classement_clients(); break;
+            case 11:
+                afficher_succes(" Au revoir !");
+                break;
+            default:
+                if(choix!=0) afficher_erreur("Choix invalide.");
+        }
+        printf("\nAppuyez sur Entrée pour continuer...");
+        while(getchar()!='\n'); getchar();
+    } while(choix!=11);
+
+    /* Liberer memoire /verifier*/
+    NoeudReservation *p=tete_reservations;
+    while(p){ NoeudReservation *tmp=p; p=p->suiv; free(tmp); }
+    return 0;
+}
