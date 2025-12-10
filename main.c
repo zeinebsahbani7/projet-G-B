@@ -244,3 +244,44 @@ void filtrer_reservations(const char *statut){
     }
     if(!found) printf(YELLOW "Aucun élément avec ce statut.\n" RESET);
 }
+
+void taux_occupation(){
+    printf(BLUE "\n=== Taux d'occupation par salle ===\n" RESET);
+    for(int i=0;i<nb_salles;i++){
+        int total=0, occupe=0;
+        for(NoeudReservation *p=tete_reservations;p;p=p->suiv){
+            if(strcmp(p->res.nom_salle,salles[i].nom)==0)
+            {
+                total++; 
+                if(strcmp(p->res.statut,"confirmée")==0) occupe++;
+            }
+        }
+        float taux=(total>0)?(100.0f*occupe/total):0;/*melek fehmetha */
+        printf("%-12s : %.2f%% (confirmées: %d / total: %d)\n", salles[i].nom, taux, occupe, total);
+    }
+}
+
+void revenus_annuels(){
+    printf(BLUE "\n=== Revenus mensuels et annuels (confirmées) ===\n" RESET);
+    float mois[12]={0}, total=0; time_t t=time(NULL); struct tm tm=*localtime(&t); int an=tm.tm_year+1900;
+    for(NoeudReservation *p=tete_reservations;p;p=p->suiv){
+        int j,m,a; if(sscanf(p->res.date,"%d/%d/%d",&j,&m,&a)==3 && a==an && strcmp(p->res.statut,"confirmée")==0){
+            if(m>=1&&m<=12){ mois[m-1]+=p->res.tarif; total+=p->res.tarif; }
+        }
+    }
+    for(int i=0;i<12;i++) printf("Mois %2d : %.2f DT\n",i+1,mois[i]);
+    printf(GREEN "\nTotal annuel : %.2f DT\n" RESET,total);
+}
+
+
+void classement_clients(){
+    ClientStats stats[200]; int nb=0;
+    for(NoeudReservation *p=tete_reservations;p;p=p->suiv){
+        int found=0;
+        for(int i=0;i<nb;i++) if(strcmp(stats[i].nom,p->res.client)==0){ stats[i].nb_reservations++; found=1; break; }
+        if(!found && nb<200){ strncpy(stats[nb].nom,p->res.client,49); stats[nb].nom[49]='\0'; stats[nb].nb_reservations=1; nb++; }
+    }
+    for(int i=0;i<nb-1;i++) for(int j=i+1;j<nb;j++) if(stats[j].nb_reservations>stats[i].nb_reservations){ ClientStats tmp=stats[i]; stats[i]=stats[j]; stats[j]=tmp; }
+    printf(GREEN "\n🏆 Clients les plus fréquents:\n" RESET);
+    for(int i=0;i<nb && i<10;i++) printf(" #%d %-20s -> %d réservations\n", i+1, stats[i].nom, stats[i].nb_reservations);
+}
