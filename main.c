@@ -99,3 +99,90 @@ void charger_reservations(int *Nbline){
     }
     fclose(f); afficher_succes("Réservations chargées depuis le fichier.");
 }
+/*verifier*/
+void sauvgarder_tarif(Salle *salles_arr, int nb){
+    FILE *f=fopen("tarifs.txt","w"); if(!f){afficher_erreur("Impossible d'ouvrir tarifs.txt");return;}
+    for(int i=0;i<nb;i++) fprintf(f,"%s;%f\n",salles_arr[i].nom,salles_arr[i].tarif_horaire);
+    fclose(f);
+}
+/*verifier*/
+void generer_facture(const Reservation *r){
+    #ifdef _WIN32
+      system("if not exist factures mkdir factures >nul 2>&1");
+    #else
+      system("mkdir -p factures");
+    #endif
+    char ticket[256]; snprintf(ticket,sizeof(ticket),"factures/facture_%d.txt",r->id);
+    FILE *f=fopen(ticket,"w");
+    fprintf(f,"========================================\n");
+    fprintf(f,"           FACTURE DE RESERVATION        \n");
+    fprintf(f,"========================================\n");
+    fprintf(f,"ID: %d\nClient: %s\nSalle: %s\nDate: %s\n", r->id, r->client, r->nom_salle, r->date);
+    fprintf(f,"Durée: %.2f heures\nMontant: %.2f DT\n", minutes_diff(r->debut,r->fin)/60.0, r->tarif);
+    fprintf(f,"========================================\nMerci pour votre confiance !\n");
+    fclose(f);
+}
+/*verifier*/
+void afficher_menu(){
+    #ifdef _WIN32
+      system("cls");
+    #else
+      system("clear");
+    #endif
+    printf(BLUE "=========== MENU PRINCIPAL ===========\n" RESET);
+    printf(" 1. Nouvelle réservation\n 2. Chiffre d'affaires\n 3. Réservations par mois\n");
+    printf(" 4. Salles populaires\n 5. Supprimer réservation\n 6. Rechercher (client/salle/date)\n");
+    printf(" 7. Filtrer par statut\n 8. Taux d'occupation\n 9. Revenus annuels\n");
+    printf("10. Classement clients\n11. Quitter\n");
+
+}
+int dateValide(const char *date) {
+    int jour, mois, annee;
+
+    if (strlen(date) != 10 || date[2] != '/' || date[5] != '/')
+        return 0;
+
+    if (sscanf(date, "%2d/%2d/%4d", &jour, &mois, &annee) != 3)
+        return 0;
+
+    if (mois < 1 || mois > 12) return 0;
+    if (annee <= 0) return 0;
+
+    int joursParMois[] = {31,28,31,30,31,30,31,31,30,31,30,31};
+
+    if (jour < 1 || jour > joursParMois[mois-1]) return 0;
+
+    return 1; 
+}
+int heureValide(const char *heure) {
+    int h, m;
+
+    if (strlen(heure) != 5 || heure[2] != ':')
+        return 0;
+
+    if (sscanf(heure, "%2d:%2d", &h, &m) != 2)
+        return 0;
+
+    if (h < 0 || h > 23) return 0;
+    if (m < 0 || m > 59) return 0;
+
+    return 1; 
+}
+
+
+
+
+/*trouver struct salle a partir de nom/verifier*/
+Salle* psalle(const char *nom){for(int i=0;i<nb_salles;i++)if(strcmp(salles[i].nom,nom)==0)return &salles[i];return NULL;}
+
+/*verifier*/
+void chiffre_affaires_par_salle(){
+    printf(BLUE "\n=== CHIFFRE D'AFFAIRES PAR SALLE ===\n" RESET);
+    for(int i=0;i<nb_salles;i++){
+        float ca=0;
+        for(NoeudReservation *p=tete_reservations;p;p=p->suiv)
+            if(strcmp(p->res.nom_salle,salles[i].nom)==0 && strncmp(p->res.statut,"confirm",7)==0)
+                ca+=p->res.tarif;
+        printf(" %-12s : %.2f DT\n",salles[i].nom,ca);
+    }
+}
