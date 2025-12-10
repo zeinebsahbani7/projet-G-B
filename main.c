@@ -186,3 +186,61 @@ void chiffre_affaires_par_salle(){
         printf(" %-12s : %.2f DT\n",salles[i].nom,ca);
     }
 }
+
+void reservations_par_mois_cette_annee(){
+    printf(BLUE "\n=== RÉSERVATIONS PAR MOIS (ANNEE EN COURS) ===\n" RESET);
+    int c[12]={0}; time_t t=time(NULL); struct tm tm=*localtime(&t); int an=tm.tm_year+1900;
+    for(NoeudReservation *p=tete_reservations;p;p=p->suiv){
+        int j,m,a; if(sscanf(p->res.date,"%d/%d/%d",&j,&m,&a)==3 && a==an && strcmp(p->res.statut,"confirmée")==0){
+            if(m>=1&&m<=12) c[m-1]++; }
+    }
+    for(int i=0;i<12;i++) printf("Mois %2d : %d\n",i+1,c[i]);
+}
+
+void salles_les_plus_populaires(){
+    Classement cl[NB_SALLES]; int nb=0;
+    for(int i=0;i<nb_salles;i++){
+        strncpy(cl[nb].nom,salles[i].nom,49); cl[nb].nom[49]='\0'; cl[nb].reservations=0;
+        for(NoeudReservation *p=tete_reservations;p;p=p->suiv)
+            if(strcmp(p->res.nom_salle,salles[i].nom)==0 && strcmp(p->res.statut,"confirmée")==0)
+                cl[nb].reservations++;
+        nb++;
+    }
+    for(int i=0;i<nb-1;i++) for(int j=i+1;j<nb;j++) if(cl[j].reservations>cl[i].reservations){Classement tmp=cl[i];cl[i]=cl[j];cl[j]=tmp;}
+    printf(GREEN "\n🏆 Top salles:\n" RESET);
+    for(int i=0;i<nb && i<5;i++) printf(" #%d %s -> %d réservations\n", i+1, cl[i].nom, cl[i].reservations);
+}
+
+void supprimer_reservation(int id){
+    NoeudReservation *cur=tete_reservations;
+    while(cur && cur->res.id!=id) cur=cur->suiv;
+    if(!cur){afficher_erreur("Réservation introuvable.");return;}
+    supprimer_noeud(cur); afficher_succes("Réservation supprimée.");
+}
+
+void rechercher_reservation(const char *critere,const char *valeur){
+    printf(BLUE "\n=== Recherche (%s = %s) ===\n" RESET,critere,valeur);
+    int found=0;
+    for(NoeudReservation *p=tete_reservations;p;p=p->suiv){
+        if ((strcmp(critere,"client")==0 && stricmp(p->res.client,valeur)==0) ||
+            (strcmp(critere,"salle")==0  && stricmp(p->res.nom_salle,valeur)==0) ||
+            (strcmp(critere,"date")==0   && strcmp(p->res.date,valeur)==0)) {
+            printf("ID %d | %s | %s | %s | statut: %s\n", p->res.id, p->res.client, p->res.nom_salle, p->res.date, p->res.statut);
+            found=1;
+        }
+    }
+    if(!found) printf(YELLOW "Aucun résultat.\n" RESET);
+}
+
+void filtrer_reservations(const char *statut){
+    printf(BLUE "\n=== Réservations (%s) ===\n" RESET,statut);
+    int found=0;
+    for(NoeudReservation *p=tete_reservations;p;p=p->suiv){
+        if(strcmp(p->res.statut,statut)==0){
+            printf("ID %d | Client: %s | Salle: %s | Date: %s | %s-%s\n",
+                p->res.id,p->res.client,p->res.nom_salle,p->res.date,p->res.debut,p->res.fin);
+            found=1;
+        }
+    }
+    if(!found) printf(YELLOW "Aucun élément avec ce statut.\n" RESET);
+}
