@@ -29,7 +29,7 @@ NoeudReservation *queue_reservations = NULL;
 void afficher_erreur(const char *message) { printf(RED "✖ Erreur : %s\n" RESET, message); }
 void afficher_succes(const char *message){ printf(GREEN "✔ %s\n" RESET, message); }
 
-/* chevauchement/verifier */
+/* fonction chevauchement/verifier */
 int chevauchement(const char *d1,const char *f1,const char *d2,const char *f2){
     int h1,m1,h2,m2,a1,b1,a2,b2;
     if (sscanf(d1,"%d:%d",&h1,&m1)!=2 || sscanf(f1,"%d:%d",&a1,&b1)!=2) return 0;
@@ -38,7 +38,7 @@ int chevauchement(const char *d1,const char *f1,const char *d2,const char *f2){
     return (debut1<fin2 && debut2<fin1);
 }
 
-/* disponibilite /verifier */
+/* fonction disponibilite /verifier */
 int salle_disponible(const Reservation *r, NoeudReservation *tete){
     for(NoeudReservation *p=tete;p;p=p->suiv)
         if(strcmp(p->res.nom_salle,r->nom_salle)==0 && strcmp(p->res.date,r->date)==0
@@ -47,7 +47,7 @@ int salle_disponible(const Reservation *r, NoeudReservation *tete){
     return 1;
 }
 
-/* capacite/verifier */
+/* fonction capacite/verifier */
 int capacite_ok(const Salle *salle,int pres){
     if(!salle){afficher_erreur("Salle inconnue.");return 0;}
     if(pres>salle->capacite){char buf[64];sprintf(buf,"Capacité max %d",salle->capacite);afficher_erreur(buf);return 0;}
