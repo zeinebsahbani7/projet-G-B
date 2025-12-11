@@ -34,4 +34,4 @@ typedef struct Classement {
     int reservations;
 } Classement;
 typedef struct { char nom[50]; int nb_reservations; } ClientStats;
-#endif /* STRUCT_H */
+#endif
