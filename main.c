@@ -181,7 +181,7 @@ void chiffre_affaires_par_salle(){
     for(int i=0;i<nb_salles;i++){
         float ca=0;
         for(NoeudReservation *p=tete_reservations;p;p=p->suiv)
-            if(strcmp(p->res.nom_salle,salles[i].nom)==0 && strncmp(p->res.statut,"confirm",7)==0)
+            if(strcmp(p->res.nom_salle,salles[i].nom)==0 && strncmp(p->res.statut,"confirmée",7)==0)
                 ca+=p->res.tarif;
         printf(" %-12s : %.2f DT\n",salles[i].nom,ca);
     }
