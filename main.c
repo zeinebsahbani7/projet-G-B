@@ -100,9 +100,9 @@ void charger_reservations(int *Nbline){
     fclose(f); afficher_succes("Réservations chargées depuis le fichier.");
 }
 /*verifier*/
-void sauvgarder_tarif(Salle *salles_arr, int nb){
+void sauvgarder_tarif(Salle *salles, int nb){
     FILE *f=fopen("tarifs.txt","w"); if(!f){afficher_erreur("Impossible d'ouvrir tarifs.txt");return;}
-    for(int i=0;i<nb;i++) fprintf(f,"%s;%f\n",salles_arr[i].nom,salles_arr[i].tarif_horaire);
+    for(int i=0;i<nb;i++) fprintf(f,"%s;%f\n",salles[i].nom,salles[i].tarif_horaire);
     fclose(f);
 }
 /*verifier*/
