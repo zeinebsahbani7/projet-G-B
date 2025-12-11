@@ -1,4 +1,4 @@
-/* struct.h - version francaise cleaned */
+
 #ifndef STRUCT_H
 #define STRUCT_H
 
